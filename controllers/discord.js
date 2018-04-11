@@ -1,11 +1,10 @@
 const Discord = require('discord.io')
-const auth = require('../config/auth.json')
 const commandHelper = require('../helpers/command')
 const logger = require('winston')
 const giphyController = require('./giphy')
 
 const bot =  new Discord.Client({
-    token: auth.discord.token,
+    token: process.env.discord_token,
     autorun: true
 })
 

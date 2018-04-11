@@ -1,11 +1,10 @@
 const giphyClient = require('../clients/giphy')
-const auth = require('../config/auth.json')
 const logger = require('winston')
 
 const params = {
     json: true,
     qs: {
-        api_key: auth.giphy.api_key
+        api_key: process.env.giphy_api_key
     }
 }
 
