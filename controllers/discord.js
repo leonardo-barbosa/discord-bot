@@ -2,6 +2,8 @@ const Discord = require('discord.io')
 const auth = require('../config/auth.json')
 const commandHelper = require('../helpers/command')
 const logger = require('winston')
+const giphyController = require('./giphy')
+
 const bot =  new Discord.Client({
     token: auth.discord.token,
     autorun: true
@@ -30,20 +32,23 @@ const ping = (channelID) => {
 } 
 
 const beyonce = (channelID) => { 
-    // TODO
-    bot.sendMessage( { 
-        to: channelID,
-        message: '',
-        embed: { 
-            image: {
-                url: 'https://media0.giphy.com/media/xgVd5FItirFlu/giphy.gif'
-            }
-        }
-    })
+    giphyController.random('beyonce')
+        .then( responseBody => {
+            bot.sendMessage( {
+                to: channelID,
+                message: '',
+                embed: {
+                    image: {
+                        url: responseBody.image_original_url
+                    }
+                }
+            })
+        })
+        .catch( err => logger.error(err) )
 }
 
 const help = (channelID) => {
-    getCommandListArray()
+    getCommandList()
         .then( stringList => {
             bot.sendMessage( {
                 to: channelID,
@@ -53,7 +58,7 @@ const help = (channelID) => {
         .catch( err => logger.info(err) )
 }
 
-const getCommandListArray = () => {
+const getCommandList = () => {
     let commandsListArray = JSON.stringify(commands)
         .replace(/["{}:]/g, '').split(",")
     
