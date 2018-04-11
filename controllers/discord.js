@@ -25,36 +25,32 @@ const executeCommand = (commandData, channelID) => {
 }
 
 const ping = (channelID) => {
-    bot.sendMessage({
-        to: channelID,
-        message: "Pong!"
-    })
+    sendMessage(
+        channelID,
+        "Pong!"
+    )
 } 
 
 const beyonce = (channelID) => { 
     giphyController.random('beyonce')
         .then( responseBody => {
-            bot.sendMessage( {
-                to: channelID,
-                message: '',
-                embed: {
-                    image: {
-                        url: responseBody.image_original_url
-                    }
-                }
-            })
-        })
+            sendMessageWithEmbedImage(
+                channelID,
+                '',
+                responseBody.image_original_url
+            )
+        } )
         .catch( err => logger.error(err) )
 }
 
 const help = (channelID) => {
     getCommandList()
         .then( stringList => {
-            bot.sendMessage( {
-                to: channelID,
-                message: 'Comandos disponíveis: \n' + stringList
-            })
-        })
+            sendMessage(
+                channelID,
+                'Comandos disponíveis: \n' + stringList
+            )
+        } )
         .catch( err => logger.info(err) )
 }
 
@@ -69,6 +65,25 @@ const getCommandList = () => {
             reject(err)
         }
     }) 
+}
+
+const sendMessage = (channelID, message) => {
+    bot.sendMessage( {
+        to: channelID,
+        message: message
+    })
+}
+
+const sendMessageWithEmbedImage = (channeldID, message, embedUrl) => {
+    bot.sendMessage( {
+        to: channeldID,
+        message: message,
+        embed: {
+            image: {
+                url: embedUrl
+            }
+        }
+    })
 }
 
 const commands = {
