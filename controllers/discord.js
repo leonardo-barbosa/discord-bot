@@ -2,58 +2,68 @@ const Discord = require('discord.io')
 const auth = require('../config/auth.json')
 const commandHelper = require('../helpers/command')
 const logger = require('winston')
+const giphyController = require('./giphy')
+
 const bot =  new Discord.Client({
     token: auth.discord.token,
     autorun: true
 })
 
+const getChannelID = () => {
+    return this.channelID
+}
+
 const listenCommands = (message, channelID) => {
     if(message.substring(0,1) == '!') {
+        this.channelID = channelID
         let commandObject = commandHelper.commandParser(message)
-            .then( commandData => executeCommand(commandData, channelID)) 
+            .then( commandData =>  executeCommand(commandData, channelID))
     }
 }
 
-const executeCommand = (commandData, channelID) => {
+const executeCommand = (commandData) => {
+    let commandObject= commands[commandData.command]
     try {
-        commands[commandData.command].fn(channelID)
-    } catch(e) {
-        logger.info(e)
+        if ( commandObject ) {
+            return commandObject.fn()
+        } else {
+            return sendMessage(
+                'Comando desconhecido! \nUtilize !help para listar todos.'
+            )
+        }
+    } catch( err ) {
+        logger.error( err )
     }
 }
 
-const ping = (channelID) => {
-    bot.sendMessage({
-        to: channelID,
-        message: "Pong!"
-    })
+const ping = () => {
+    return sendMessage(
+        "Pong!"
+    )
 } 
 
-const beyonce = (channelID) => { 
-    // TODO
-    bot.sendMessage( { 
-        to: channelID,
-        message: '',
-        embed: { 
-            image: {
-                url: 'https://media0.giphy.com/media/xgVd5FItirFlu/giphy.gif'
-            }
-        }
-    })
+const beyonce = () => { 
+    return giphyController.random('beyonce')
+        .then( responseBody => {
+            sendMessageWithEmbedImage(
+                '',
+                responseBody.image_original_url
+            )
+        } )
+        .catch( err => logger.error(err) )
 }
 
-const help = (channelID) => {
-    getCommandListArray()
+const help = () => {
+    return getCommandList()
         .then( stringList => {
-            bot.sendMessage( {
-                to: channelID,
-                message: 'Comandos disponíveis: \n' + stringList
-            })
-        })
+            sendMessage(
+                'Comandos disponíveis: \n' + stringList
+            )
+        } )
         .catch( err => logger.info(err) )
 }
 
-const getCommandListArray = () => {
+const getCommandList = () => {
     let commandsListArray = JSON.stringify(commands)
         .replace(/["{}:]/g, '').split(",")
     
@@ -64,6 +74,25 @@ const getCommandListArray = () => {
             reject(err)
         }
     }) 
+}
+
+const sendMessage = (message) => {
+    return bot.sendMessage( {
+        to: getChannelID(),
+        message: message
+    })
+}
+
+const sendMessageWithEmbedImage = (message, embedUrl) => {
+    return bot.sendMessage( {
+        to: getChannelID(),
+        message: message,
+        embed: {
+            image: {
+                url: embedUrl
+            }
+        }
+    })
 }
 
 const commands = {
