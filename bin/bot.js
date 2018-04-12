@@ -1,22 +1,27 @@
 const logger = require('winston')
-const discordController = require('../controllers/discord')
-const bot = discordController.bot
+const auth = require('../auth.json')
+const Discord = require('discord.js');
+const client = new Discord.Client();
 
-// Configure logger settings
 logger.remove(logger.transports.Console)
 logger.add(logger.transports.Console, {
     colorize: true
-})
+} )
 logger.level = 'debug'
 
-// Initialize Discord bot
-
-bot.on('ready', function (evt) {
+client.on('ready', (evt) => {
     logger.info('Connected')
     logger.info('Logged in as: ')
-    logger.info(bot.username + ' - (' + bot.id + ')')
+    logger.info(client.user.username + ' - (' + client.user.id + ')')
 })
 
-bot.on('message', (user, userID, channelID, message, evt, olar) => {
-    discordController.listenCommands(message, channelID)
+client.on('message', msg => {
+    if( msg.content === 'ping') {
+        let channelID = msg.channel.id
+        client.channels
+            .get(channelID)
+            .send('Pong')
+    }
 })
+
+client.login(auth.token)
