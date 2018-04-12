@@ -9,33 +9,43 @@ const bot =  new Discord.Client({
     autorun: true
 })
 
+const getChannelID = () => {
+    return this.channelID
+}
+
 const listenCommands = (message, channelID) => {
     if(message.substring(0,1) == '!') {
+        this.channelID = channelID
         let commandObject = commandHelper.commandParser(message)
-            .then( commandData => executeCommand(commandData, channelID)) 
+            .then( commandData =>  executeCommand(commandData, channelID))
     }
 }
 
-const executeCommand = (commandData, channelID) => {
+const executeCommand = (commandData) => {
+    let commandObject= commands[commandData.command]
     try {
-        commands[commandData.command].fn(channelID)
-    } catch(e) {
-        logger.info(e)
+        if ( commandObject ) {
+            return commandObject.fn()
+        } else {
+            return sendMessage(
+                'Comando desconhecido! \nUtilize !help para listar todos.'
+            )
+        }
+    } catch( err ) {
+        logger.error( err )
     }
 }
 
-const ping = (channelID) => {
-    sendMessage(
-        channelID,
+const ping = () => {
+    return sendMessage(
         "Pong!"
     )
 } 
 
-const beyonce = (channelID) => { 
-    giphyController.random('beyonce')
+const beyonce = () => { 
+    return giphyController.random('beyonce')
         .then( responseBody => {
             sendMessageWithEmbedImage(
-                channelID,
                 '',
                 responseBody.image_original_url
             )
@@ -43,11 +53,10 @@ const beyonce = (channelID) => {
         .catch( err => logger.error(err) )
 }
 
-const help = (channelID) => {
-    getCommandList()
+const help = () => {
+    return getCommandList()
         .then( stringList => {
             sendMessage(
-                channelID,
                 'Comandos disponíveis: \n' + stringList
             )
         } )
@@ -67,16 +76,16 @@ const getCommandList = () => {
     }) 
 }
 
-const sendMessage = (channelID, message) => {
-    bot.sendMessage( {
-        to: channelID,
+const sendMessage = (message) => {
+    return bot.sendMessage( {
+        to: getChannelID(),
         message: message
     })
 }
 
-const sendMessageWithEmbedImage = (channeldID, message, embedUrl) => {
-    bot.sendMessage( {
-        to: channeldID,
+const sendMessageWithEmbedImage = (message, embedUrl) => {
+    return bot.sendMessage( {
+        to: getChannelID(),
         message: message,
         embed: {
             image: {
