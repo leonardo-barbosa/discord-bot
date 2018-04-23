@@ -1,7 +1,11 @@
 const discord = require('discord.js')
-const commandHelper = require('../helpers/command')
 const discordClient = new discord.Client()
 const giphyController = require('../controllers/giphy')
+const {
+  commandParser,
+  indexOf,
+  buildEmbedBodyImage
+} = require('../helpers/command')
 
 const Discord = (msg) => {
   this.message = msg
@@ -14,21 +18,41 @@ const getMessage = () => this.message
 const handleMessage = () => {
   if (!getMessage().content.startsWith('!') || getMessage().author.bot) return
 
-  commandHelper.commandParser(getMessage().content)
+  commandParser(getMessage().content)
     .then(commandObject => executeCommand(commandObject))
 }
 
 const executeCommand = (commandObject) => {
   let command = commandObject.command
   let params = commandObject.params
-
-  if (!commandHelper.doesObjectContains(command, commands)) return
+  if (indexOf(commands, command) === -1) return
 
   command = commands[command]
 
-  if (command.params) return command.fn(params)
+  if (command.params) {
+    if (verifyParams(command.params, params)) return command.fn(params)
+    else return
+  }
 
-  command.fn()
+  return command.fn()
+}
+
+const verifyParams = (paramsNeeded, paramsSent) => {
+  let requiredParams = []
+  for (let index in paramsNeeded) {
+    if (paramsNeeded[index].required === true) requiredParams.push(index)
+  }
+
+  let requiredNotSend = requiredParams.filter((item) => {
+    return indexOf(paramsSent, item) === -1
+  })
+
+  if (requiredNotSend.length === 0) {
+    return true
+  } else {
+    sendMessage('Parâmetros ausentes: ' + requiredNotSend)
+    return false
+  }
 }
 
 const ping = () => {
@@ -43,7 +67,7 @@ const ping = () => {
 const beyonce = () => {
   giphyController.random('beyonce')
     .then(res => sendMessage(
-      commandHelper.buildEmbedBodyImage(res.image_original_url)
+      buildEmbedBodyImage(res.image_original_url)
     ))
 }
 
